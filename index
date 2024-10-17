@@ -1,0 +1,194 @@
+import ComplianceManagement from "./compliance-management"
+
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState("employee-data")
+
+  const modules = [
+    { id: "employee-data", name: "إدارة البيانات الشخصية", icon: <UserCircle className="w-5 h-5" />, component: <EmployeeDataManagement /> },
+    { id: "payroll", name: "إدارة الرواتب والتعويضات", icon: <Wallet className="w-5 h-5" />, component: <PayrollManagement /> },
+    { id: "attendance", name: "إدارة الحضور والإجازات", icon: <CalendarDays className="w-5 h-5" />, component: <AttendanceManagement /> },
+    { id: "recruitment", name: "إدارة التوظيف والتعيين", icon: <UserPlus className="w-5 h-5" />, component: <RecruitmentManagement /> },
+    { id: "training", name: "إدارة التدريب والتطوير", icon: <GraduationCap className="w-5 h-5" />, component: <TrainingManagement /> },
+    { id: "performance", name: "إدارة تقييم الأداء", icon: <BarChart className="w-5 h-5" />, component: <PerformanceManagement /> },
+    { id: "compliance", name: "إدارة الامتثال والقوانين", icon: <Scale className="w-5 h-5" />, component: <ComplianceManagement /> },
+  ]
+
+  return (
+    <div className="container mx-auto p-4">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-2xl">نظام إدارة الموارد البشرية</CardTitle>
+          <CardDescription>إدارة شاملة لجميع جوانب الموارد البشرية</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+              {modules.map((module) => (
+                <TabsTrigger key={module.id} value={module.id} className="flex items-center space-x-2">
+                  {module.icon}
+                  <span>{module.name}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {modules.map((module) => (
+              <TabsContent key={module.id} value={module.id}>
+                {module.component}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+
+
+
+
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Calendar } from "@/components/ui/calendar"
+import { MapPin } from "lucide-react"
+
+export default function AttendanceManagement() {
+  const [activeTab, setActiveTab] = useState("attendance")
+  const [date, setDate] = useState<Date | undefined>(new Date())
+  const [location, setLocation] = useState<string | null>(null)
+  const [attendanceRecords, setAttendanceRecords] = useState<Array<{date: string, time: string, location: string}>>([])
+
+  useEffect(() => {
+    // This effect will run when the component mounts
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        // Here you would typically use a reverse geocoding service to get the city name
+        // For this example, we'll just use the coordinates
+        setLocation(`${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+      });
+    }
+  }, []);
+
+  const handleAttendanceSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const now = new Date()
+    const newRecord = {
+      date: now.toLocaleDateString(),
+      time: now.toLocaleTimeString(),
+      location: location || "Unknown"
+    }
+    setAttendanceRecords([...attendanceRecords, newRecord])
+  }
+
+  const handleLeaveSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    console.log("Leave request submitted")
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>إدارة الحضور والإجازات</CardTitle>
+        <CardDescription>تتبع الحضور وإدارة الإجازات للموظفين</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="attendance">سجل الحضور</TabsTrigger>
+            <TabsTrigger value="leave">طلب إجازة</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="attendance">
+            <form onSubmit={handleAttendanceSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="location">الموقع الحالي</Label>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <span>{location || "جاري تحديد الموقع..."}</span>
+                </div>
+              </div>
+              <Button type="submit">تسجيل الحضور</Button>
+            </form>
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-2">سجل الحضور</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>التاريخ</TableHead>
+                    <TableHead>الوقت</TableHead>
+                    <TableHead>الموقع</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {attendanceRecords.map((record, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{record.date}</TableCell>
+                      <TableCell>{record.time}</TableCell>
+                      <TableCell>{record.location}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="leave">
+            <form onSubmit={handleLeaveSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="leaveType">نوع الإجازة</Label>
+                <Select>
+                  <SelectTrigger id="leaveType">
+                    <SelectValue placeholder="اختر نوع الإجازة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="annual">إجازة سنوية</SelectItem>
+                    <SelectItem value="sick">إجازة مرضية</SelectItem>
+                    <SelectItem value="maternity">إجازة أمومة</SelectItem>
+                    <SelectItem value="paternity">إجازة أبوة</SelectItem>
+                    <SelectItem value="bereavement">إجازة وفاة</SelectItem>
+                    <SelectItem value="marriage">إجازة زواج</SelectItem>
+                    <SelectItem value="other">إجازة أخرى</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="leaveStartDate">تاريخ بداية الإجازة</Label>
+                  <Input id="leaveStartDate" type="date" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leaveEndDate">تاريخ نهاية الإجازة</Label>
+                  <Input id="leaveEndDate" type="date" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="leaveReason">سبب الإجازة</Label>
+                <Textarea id="leaveReason" placeholder="أدخل سبب الإجازة" />
+              </div>
+              <Button type="submit">تقديم طلب الإجازة</Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+      <CardFooter>
+        <div className="w-full">
+          <h3 className="text-lg font-semibold mb-2">تقويم الإجازات</h3>
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="rounded-md border"
+          />
+        </div>
+      </CardFooter>
+    </Card>
+  )
+}
